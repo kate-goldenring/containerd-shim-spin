@@ -224,8 +224,9 @@ impl SpinEngine {
                         .context("failed to build spin trigger")?;
 
                     info!(" >>> running spin http trigger");
+                    let listen_addr = std::env::var("SPIN_HTTP_LISTEN_ADDR").unwrap_or_else(|_| SPIN_ADDR.to_string());
                     http_trigger.run(spin_trigger_http::CliArgs {
-                        address: parse_addr(SPIN_ADDR).unwrap(),
+                        address: parse_addr(&listen_addr).unwrap(),
                         tls_cert: None,
                         tls_key: None,
                     })

@@ -169,7 +169,7 @@ mod test {
         for _i in 0..iterations {
             eventloop.poll().await?;
         }
-        thread::sleep(time::Duration::from_secs(5));
+        tokio::time::sleep(Duration::from_secs(5)).await;
 
         // Ensure that the message was received and logged by the spin app
         let log = get_logs_by_label("app=spin-mqtt-message-logger").await?;

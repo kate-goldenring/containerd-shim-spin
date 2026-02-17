@@ -7,12 +7,13 @@ use oci_spec::image::MediaType;
 use spin_app::locked::LockedApp;
 use spin_loader::{cache::Cache, FilesMountStrategy};
 
-use crate::{constants, utils::handle_archive_layer};
+use crate::{constants, loader, utils::handle_archive_layer};
 
 #[derive(Clone)]
 pub enum Source {
     File(PathBuf),
-    Oci,
+    Oci, // Rename to OciSpin
+    // TODO: support OciWasm to support BareWasm (wkg) app source with media type "application/wasm";
 }
 
 impl std::fmt::Debug for Source {
@@ -100,14 +101,22 @@ impl Source {
             }
             Source::Oci => {
                 let working_dir = PathBuf::from("/");
-                let loader = spin_oci::OciLoader::new(working_dir);
 
-                // TODO: what is the best way to get this info? It isn't used only saved in the locked file
-                let reference = "docker.io/library/wasmtest_spin:latest";
-
-                loader
-                    .load_from_cache(PathBuf::from("/spin.json"), reference, cache)
+                // TODO: resolve changes from this PR: https://github.com/spinframework/spin/pull/3361/changes
+                let locked_content = tokio::fs::read("/spin.json")
                     .await
+                    .with_context(|| format!("failed to read from \"/spin.json\""))?;
+                // TODO: Support BareWasm (wkg) app source
+                let mut locked_app = LockedApp::from_json(&locked_content)
+                    .context("failed to decode locked app from \"/spin.json\"")?;
+                for component in &mut locked_app.components {
+                    loader::resolve_component_content_refs(&working_dir, component, cache)
+                        .await
+                        .with_context(|| {
+                            format!("failed to resolve content for component {:?}", component.id)
+                        })?;
+                }
+                Ok(locked_app)
             }
         }?;
         Ok(locked_app)

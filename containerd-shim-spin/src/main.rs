@@ -3,6 +3,7 @@ use engine::SpinShim;
 
 mod constants;
 mod engine;
+mod loader;
 mod source;
 mod trigger;
 mod utils;

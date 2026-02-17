@@ -182,6 +182,14 @@ impl SpinSandbox {
                         tls_cert: None,
                         tls_key: None,
                         find_free_port: false,
+                        http1_max_buf_size: None,
+                        max_instance_reuse_count: None,
+                        max_instance_concurrent_reuse_count: None,
+                        request_timeout: None,
+                        // TODO: cannot access Range enum because it is not public -- this causes an error
+                        idle_instance_timeout: spin_trigger_http::Range::Value(
+                            std::time::Duration::from_secs(1),
+                        ),
                     };
                     trigger::run::<HttpTrigger>(cli_args, app, &loader).await?
                 }

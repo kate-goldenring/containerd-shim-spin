@@ -140,7 +140,7 @@ You have two choices for publishing spin apps.  The steps to deploy are the same
 Create a `Dockerfile` at the root of the application directory with the following:
 
 ```dockerfile
-FROM --platform=${BUILDPLATFORM} rust:1.91 AS build
+FROM --platform=${BUILDPLATFORM} rust:1.95 AS build
 WORKDIR /opt/build
 COPY . .
 RUN rustup target add wasm32-wasip1 && cargo build --target wasm32-wasip1 --release

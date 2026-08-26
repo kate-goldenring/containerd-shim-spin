@@ -12,6 +12,7 @@ use futures::future;
 use log::info;
 use spin_app::locked::LockedApp;
 use spin_factor_outbound_networking::validate_service_chaining_for_components;
+use spin_telemetry::HistogramBuckets;
 use spin_trigger::cli::NoCliArgs;
 use spin_trigger_http::HttpTrigger;
 use spin_trigger_redis::RedisTrigger;
@@ -152,7 +153,11 @@ impl SpinSandbox {
         configure_application_variables_from_environment_variables(&locked_app)?;
         let trigger_cmds = get_supported_triggers(&locked_app)
             .with_context(|| format!("Couldn't find trigger executor for {app_source:?}"))?;
-        spin_telemetry::init(version!().version.to_string())?;
+        let histogram_buckets = HistogramBuckets{
+            metric_name: "default", 
+            boundaries: vec![ 0.0, 5.0, 10.0, 25.0, 50.0, 75.0, 100.0, 250.0, 500.0, 750.0, 1000.0, 2500.0, 5000.0, 7500.0, 10000.0 ]
+        };
+        spin_telemetry::init(version!().version.to_string(), vec![histogram_buckets])?;
 
         self.run_trigger(ctx, &trigger_cmds, locked_app, app_source)
             .await
